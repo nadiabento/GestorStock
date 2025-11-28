@@ -2,7 +2,7 @@ package org.estga;
 
 import org.estga.view.RegistroEntrada;
 import org.estga.view.RegistroSaida;
-
+import org.estga.data.DBConnection;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -43,11 +43,13 @@ public class Main extends JFrame {
         add(panelBotoes, BorderLayout.CENTER);
     }
 
-    // MÉTODO MAIN ADICIONADO PARA INICIAR A APLICAÇÃO
+    // METODO MAIN ADICIONADO PARA INICIAR A APLICAÇÃO
     public static void main(String[] args) {
         // Usa SwingUtilities.invokeLater para iniciar a GUI na Event Dispatch Thread (EDT)
+        System.out.println("A iniciar Sistema de Gestão de Stock...");
+        DBConnection.getConnection();
         SwingUtilities.invokeLater(() -> {
             new Main().setVisible(true);
         });
-    }
-}
+
+}}
