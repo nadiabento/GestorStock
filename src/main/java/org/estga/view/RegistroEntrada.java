@@ -5,7 +5,7 @@ import java.awt.*;
 
 public class RegistroEntrada extends JFrame {
 
-    private JFrame janelaAnterior; // Armazena a referência para a Main View
+    private JFrame janelaAnterior;
 
     public RegistroEntrada(JFrame janelaAnterior) {
         super("Registro de Entrada de Produtos");
@@ -15,14 +15,13 @@ public class RegistroEntrada extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
 
-        // --- Painel de Formulário (Centro) ---
-        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-
-        // Dados de simulação (em produção, viriam de um FornecedorDAO)
+        // Dados de simulação
         String[] fornecedores = {"Fornecedor Alfa", "Fornecedor Beta"};
         String[] produtos = {"Produto A", "Produto B", "Produto C"};
 
-        // Campos do formulário
+        // --- Painel de Formulário ---
+        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+
         JTextField txtQuantidade = new JTextField(10);
         JComboBox<String> cmbFornecedor = new JComboBox<>(fornecedores);
         JComboBox<String> cmbProduto = new JComboBox<>(produtos);
@@ -34,7 +33,7 @@ public class RegistroEntrada extends JFrame {
         formPanel.add(new JLabel("Produto:"));
         formPanel.add(cmbProduto);
 
-        // --- Painel de Botões (Sul) ---
+        // --- Painel de Botões ---
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JButton btnVoltar = new JButton("Voltar à Janela Anterior");
         JButton btnConfirmar = new JButton("Confirmar Entrada");
@@ -46,7 +45,6 @@ public class RegistroEntrada extends JFrame {
         buttonPanel.add(btnVoltar);
         buttonPanel.add(btnConfirmar);
 
-        // Adiciona os painéis ao JFrame
         add(formPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
@@ -63,16 +61,11 @@ public class RegistroEntrada extends JFrame {
             String forn = (String) fornecedor.getSelectedItem();
             String prod = (String) produto.getSelectedItem();
 
-            // 🚨 PONTO DE INTEGRAÇÃO:
-            // Aqui, você chamaria o MovimentoService para:
-            // 1. Gravar o movimento de entrada.
-            // 2. Atualizar o Stock do produto.
-
+            // SIMULAÇÃO: Sem objeto Movimento. Apenas mostra o que seria feito.
             JOptionPane.showMessageDialog(this,
-                    String.format("Sucesso! Entrada de %d unidades de '%s' registada (Fornecedor: %s).", qtd, prod, forn),
+                    String.format("Sucesso! (Simulado) Entrada de %d unidades de '%s' registada (Fornecedor: %s).", qtd, prod, forn),
                     "Entrada Confirmada", JOptionPane.INFORMATION_MESSAGE);
 
-            // Limpa os campos após o sucesso
             quantidade.setText("");
 
         } catch (NumberFormatException ex) {
@@ -81,7 +74,7 @@ public class RegistroEntrada extends JFrame {
     }
 
     private void voltar() {
-        this.dispose(); // Fecha a janela atual
-        janelaAnterior.setVisible(true); // Mostra a janela anterior
+        this.dispose();
+        janelaAnterior.setVisible(true);
     }
 }

@@ -7,8 +7,7 @@ public class RegistroSaida extends JFrame {
 
     private JFrame janelaAnterior;
 
-    // Simulação do estoque atual (em produção, viria de um StockDAO/Service)
-    // Usamos um valor fixo para testar o aviso de "mais do que tem"
+    // Simulação do estoque atual (para o teste de stock)
     private static final int ESTOQUE_ATUAL_PRODUTO_A = 50;
 
     public RegistroSaida(JFrame janelaAnterior) {
@@ -19,14 +18,13 @@ public class RegistroSaida extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
 
-        // --- Painel de Formulário (Centro) ---
-        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-
-        // Dados de simulação (em produção, viriam do FuncionárioDAO e ProdutoDAO)
+        // Dados de simulação
         String[] funcionarios = {"Nádia", "João", "Maria"};
         String[] produtos = {"Produto A", "Produto B", "Produto C"};
 
-        // Campos do formulário
+        // --- Painel de Formulário ---
+        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+
         JComboBox<String> cmbFuncionario = new JComboBox<>(funcionarios);
         JComboBox<String> cmbProduto = new JComboBox<>(produtos);
         JTextField txtQuantidade = new JTextField(10);
@@ -38,7 +36,7 @@ public class RegistroSaida extends JFrame {
         formPanel.add(new JLabel("Quantidade a Sair:"));
         formPanel.add(txtQuantidade);
 
-        // --- Painel de Botões (Sul) ---
+        // --- Painel de Botões ---
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         JButton btnVoltar = new JButton("Voltar à Janela Anterior");
         JButton btnConfirmar = new JButton("Confirmar Saída");
@@ -50,7 +48,6 @@ public class RegistroSaida extends JFrame {
         buttonPanel.add(btnVoltar);
         buttonPanel.add(btnConfirmar);
 
-        // Adiciona os painéis ao JFrame
         add(formPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
@@ -69,11 +66,9 @@ public class RegistroSaida extends JFrame {
             // --- Lógica de Validação de Estoque (Requisito) ---
             int estoqueAtual = 0;
             if (prod.equals("Produto A")) {
-                // Simula a consulta ao estoque para o Produto A
                 estoqueAtual = ESTOQUE_ATUAL_PRODUTO_A;
             } else {
-                // Simulação de estoque para outros produtos
-                estoqueAtual = 100;
+                estoqueAtual = 100; // Simulação de estoque suficiente para os outros
             }
 
             if (qtdSaida > estoqueAtual) {
@@ -81,19 +76,14 @@ public class RegistroSaida extends JFrame {
                 JOptionPane.showMessageDialog(this,
                         String.format("AVISO: Stock insuficiente! A quantidade solicitada (%d) excede o stock atual de '%s' (%d).", qtdSaida, prod, estoqueAtual),
                         "Estoque Insuficiente", JOptionPane.WARNING_MESSAGE);
-                return; // Impede a confirmação e o registo
+                return;
             }
 
-            // 🚨 PONTO DE INTEGRAÇÃO:
-            // Aqui, você chamaria o MovimentoService para:
-            // 1. Gravar o movimento de saída.
-            // 2. Atualizar o Stock do produto (subtrair a quantidade).
-
+            // SIMULAÇÃO: Sem objeto Movimento. Apenas mostra o que seria feito.
             JOptionPane.showMessageDialog(this,
-                    String.format("Sucesso! Saída de %d unidades de '%s' registada (Funcionário: %s).", qtdSaida, prod, func),
+                    String.format("Sucesso! (Simulado) Saída de %d unidades de '%s' registada (Funcionário: %s).", qtdSaida, prod, func),
                     "Saída Confirmada", JOptionPane.INFORMATION_MESSAGE);
 
-            // Limpa os campos após o sucesso
             quantidade.setText("");
 
         } catch (NumberFormatException ex) {
@@ -102,7 +92,7 @@ public class RegistroSaida extends JFrame {
     }
 
     private void voltar() {
-        this.dispose(); // Fecha a janela atual
-        janelaAnterior.setVisible(true); // Mostra a janela anterior
+        this.dispose();
+        janelaAnterior.setVisible(true);
     }
 }
