@@ -3,44 +3,37 @@ package org.estga.model;
 import java.math.BigDecimal;
 
 /**
- * Representa a entidade Produto, mapeada à tabela 'produto' ou base de dados.
+ * Representa a entidade Produto, mapeada à tabela 'produto' na base de dados.
+ * Inclui o stockAtual, que é um campo agregado da tabela 'stock'.
  */
 public class Produto {
-    // Identificador do produto (chave primária)
     private int idProduto;
-    // Nome do produto
     private String nome;
-    // Descrição do produto
     private String descricao;
-    // Preço por decimal
     private BigDecimal precoUnitario;
-    // Stock mínimo para alerta
     private int stockMinimo;
-    // ID do fornecedor associado
+    private int stockMaximo;
     private int idFornecedor;
-    // Stock actual (campo de apresentação)
     private int stockAtual;
 
-    /**
-     * Construtor vazio
-     */
     public Produto() {
+        // Construtor vazio
     }
 
-    /**
-     * Construtor completo
-     */
     public Produto(int idProduto, String nome, String descricao, BigDecimal precoUnitario, int stockMinimo, int idFornecedor, int stockAtual) {
         this.idProduto = idProduto;
         this.nome = nome;
         this.descricao = descricao;
         this.precoUnitario = precoUnitario;
         this.stockMinimo = stockMinimo;
+        this.stockAtual = stockAtual;
+        this.stockMaximo = stockMaximo;
         this.idFornecedor = idFornecedor;
         this.stockAtual = stockAtual;
     }
 
-    // Getters e Setters
+    // --- Getters e Setters ---
+
     public int getIdProduto() {
         return idProduto;
     }
@@ -98,7 +91,7 @@ public class Produto {
     }
 
     /**
-     * Retorna o nome do produto para ser exibido corretamente nos JComboBox
+     * Retorna o nome do produto para ser exibido corretamente nos JComboBox.
      */
     @Override
     public String toString() {
