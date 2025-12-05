@@ -13,35 +13,71 @@ public class Dashboard {
     private JButton relatóriosButton;
     private JScrollPane scrollPane1;
     private JTable tabAlertas;
+    private JButton SaidaProdutosButton;
+    private JButton EntradaProdutosButton;
+    private JButton produtosButton;
 
     public Dashboard() {
         criarTabelaAlertas();
 
-
+        // 1. Listener para o botão SAIR (Já existente)
         if (sairButton != null) {
-            // Dentro do construtor Dashboard()
-            if (sairButton != null) {
-                sairButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
+            sairButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    SwingUtilities.getWindowAncestor(panel1).dispose();
 
-                        SwingUtilities.getWindowAncestor(panel1).dispose();
+                    JFrame frameLogin = new JFrame("Login SGS");
+                    frameLogin.setContentPane(new Login().getPanel());
+                    frameLogin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    frameLogin.setSize(600, 400);
+                    frameLogin.setLocationRelativeTo(null);
+                    frameLogin.setVisible(true);
+                }
+            });
+        }
 
-                        JFrame frameLogin = new JFrame("Login SGS");
-                        frameLogin.setContentPane(new Login().getPanel());
-                        frameLogin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                        frameLogin.setSize(600, 400);
-                        frameLogin.setLocationRelativeTo(null);
-                        frameLogin.setVisible(true);
-                    }
-                });
-            }
+        // --- NOVO: Ação para o botão ENTRADA DE PRODUTOS ---
+        // ESTE BLOCO FOI MOVIDO PARA DENTRO DO CONSTRUTOR
+        if (EntradaProdutosButton != null) {
+            EntradaProdutosButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // 1. Obtém a referência da JFrame atual (Dashboard)
+                    JFrame dashboardFrame = (JFrame) SwingUtilities.getWindowAncestor(panel1);
+
+                    // 2. Esconde a janela do Dashboard
+                    dashboardFrame.setVisible(false);
+
+                    // 3. Cria e mostra a janela de RegistroEntrada, passando o Dashboard como janela anterior
+                    new RegistroEntrada(dashboardFrame).setVisible(true); // Classe RegistroEntrada deve ser importada ou estar no mesmo pacote
+                }
+            });
+        }
+
+        // --- NOVO: Ação para o botão SAÍDA DE PRODUTOS ---
+        // ESTE BLOCO FOI MOVIDO PARA DENTRO DO CONSTRUTOR
+        if (SaidaProdutosButton != null) {
+            SaidaProdutosButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // 1. Obtém a referência da JFrame atual (Dashboard)
+                    JFrame dashboardFrame = (JFrame) SwingUtilities.getWindowAncestor(panel1);
+
+                    // 2. Esconde a janela do Dashboard
+                    dashboardFrame.setVisible(false);
+
+                    // 3. Cria e mostra a janela de RegistroSaida, passando o Dashboard como janela anterior
+                    new RegistroSaida(dashboardFrame).setVisible(true); // Classe RegistroSaida deve ser importada ou estar no mesmo pacote
+                }
+            });
         }
     }
 
     public JPanel getPanel() {
         return panel1;
     }
+
 
 
     private void criarTabelaAlertas() {

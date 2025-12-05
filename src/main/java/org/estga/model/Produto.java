@@ -12,8 +12,8 @@ public class Produto {
     private String descricao;
     private BigDecimal precoUnitario;
     private int stockMinimo;
+    private int stockMaximo;
     private int idFornecedor;
-    // stockAtual é um campo agregado necessário para a validação na View
     private int stockAtual;
 
     public Produto() {
@@ -26,6 +26,8 @@ public class Produto {
         this.descricao = descricao;
         this.precoUnitario = precoUnitario;
         this.stockMinimo = stockMinimo;
+        this.stockAtual = stockAtual;
+        this.stockMaximo = stockMaximo;
         this.idFornecedor = idFornecedor;
         this.stockAtual = stockAtual;
     }
