@@ -1,4 +1,6 @@
--- Esquema da Base de Dados ---
+-- =========================
+-- 1. Criação das Tabelas
+-- =========================
 
 -- 1. Tabela de Utilizadores --
 CREATE TABLE IF NOT EXISTS utilizador(
@@ -59,6 +61,41 @@ CREATE TABLE IF NOT EXISTS linha_movimento(
     id_linha INT AUTO_INCREMENT PRIMARY KEY,
     id_movimento INT NOT NULL,
     id_produto INT NOT NULL,
+    quantidade INT NOT NULL,
     FOREIGN KEY (id_movimento) REFERENCES movimento(id_movimento),
     FOREIGN KEY (id_produto) REFERENCES produto(id_produto)
 );
+
+-- =========================
+-- 2. Dados de Teste
+-- =========================
+
+-- Inserir Utilizadores
+INSERT IGNORE INTO utilizador (username, password, perfil) VALUES
+    ('admin', 'admin123', 'ADMIN'),
+    ('operador', '1234', 'OPERADOR'),
+    ('compras', '1234', 'COMPRAS');
+
+-- Inserir Fornecedores
+INSERT IGNORE INTO fornecedor (nome, nif, contacto) VALUES
+    ('Worten Empresas', '501234567', 'empresas@worten.pt'),
+    ('PCDIGA', '509876543', 'comercial@pcdiga.com');
+
+-- Inserir Clientes
+INSERT IGNORE INTO cliente (nome, nif) VALUES
+    ('Universidade de Aveiro', '501461108'),
+    ('Câmara Municipal', '506789123');
+
+-- Inserir Produtos
+INSERT IGNORE INTO produto (nome, descricao, preco_unitario, stock_minimo, id_fornecedor) VALUES
+    ('Portátil Lenovo ThinkPad', 'Intel i5, 16GB RAM, 512GB SSD', 850.00, 2, 1),
+    ('Rato Wireless Logitech', 'MX Master 3', 99.90, 5, 1),
+    ('Monitor Dell 24"', 'IPS Full HD', 180.00, 3, 2),
+    ('Cabo HDMI 2m', 'Cabo banhado a ouro', 10.00, 20, 2);
+
+-- Inserir Stock Inicial (Simulação)
+INSERT IGNORE INTO stock (id_produto, quantidade) VALUES
+    (1, 10), -- 10 Portáteis
+    (2, 50), -- 50 Ratos
+    (3, 1),  -- 1 Monitor (ALERTA: Abaixo do mínimo de 3!)
+    (4, 100); -- 100 Cabos
