@@ -4,7 +4,7 @@ import org.estga.data.ProdutoDAO;
 import org.estga.data.FornecedorDAO;
 import org.estga.model.Produto;
 import org.estga.model.Fornecedor;
-// import org.estga.service.MovimentoService; // Será usado na próxima etapa
+import org.estga.service.MovimentoService; // Será usado na próxima etapa
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +20,7 @@ public class RegistroEntrada extends JFrame {
     // Instanciar os DAOs
     private final ProdutoDAO produtoDAO = new ProdutoDAO();
     private final FornecedorDAO fornecedorDAO = new FornecedorDAO();
-    // private final MovimentoService movimentoService = new MovimentoService();
+    private final MovimentoService movimentoService = new MovimentoService();
 
     // ID de utilizador padrão para testes (deve existir na tabela 'utilizador')
     private static final int ID_UTILIZADOR_PADRAO = 1;
@@ -125,16 +125,13 @@ public class RegistroEntrada extends JFrame {
                 return;
             }
 
-            // 🚀 PONTO DE INTEGRAÇÃO COM SERVICE:
-            // Descomentar e usar a linha abaixo quando o MovimentoService estiver pronto
-            /*
-            movimentoService.registrarEntrada(
+          movimentoService.registrarEntrada(
                 produtoSelecionado.getIdProduto(),
                 qtd,
                 fornecedorSelecionado.getIdFornecedor(),
                 ID_UTILIZADOR_PADRAO
             );
-            */
+
 
             JOptionPane.showMessageDialog(this,
                     String.format("Sucesso! Entrada de %d unidades de '%s' registada.", qtd, produtoSelecionado.getNome()),

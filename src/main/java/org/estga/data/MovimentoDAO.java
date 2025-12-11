@@ -9,19 +9,20 @@ import java.sql.Statement;
 public class MovimentoDAO {
 
     /**
-     * Insere um novo registo na tabela 'movimento'.
+     * Insere um novo registo na tabela 'movimento' usando uma conexão transacional.
+     * conn Conexão de DB externa (controlada pelo Service).
      * tipo Tipo de movimento ('ENTRADA' ou 'SAÍDA').
      * idUtilizador ID do utilizador responsável.
-     * O ID gerado para o novo movimento.
-     * SQLException Em caso de erro de DB.
+     * return O ID gerado para o novo movimento.
+     * throws SQLException Em caso de erro de DB.
      */
-    public int inserirMovimento(String tipo, int idUtilizador) throws SQLException {
+    public int inserirMovimento(Connection conn, String tipo, int idUtilizador) throws SQLException {
         String sql = "INSERT INTO movimento (tipo_movimento, id_utilizador) VALUES (?, ?)";
         int idMovimento = -1;
 
         // Usa Statement.RETURN_GENERATED_KEYS para obter o ID gerado.
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        // O try-with-resources garante que o PreparedStatement e o ResultSet são fechados.
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, tipo);
             stmt.setInt(2, idUtilizador);
@@ -40,18 +41,18 @@ public class MovimentoDAO {
     }
 
     /**
-     * Insere uma linha de detalhe na tabela 'linha_movimento'.
-     * idMovimento ID do movimento principal.
-     * idProduto ID do produto envolvido.
-     * quantidade Quantidade que entrou ou saiu.
-     * SQLException Em caso de erro de DB.
+     * Insere uma linha de detalhe na tabela 'linha_movimento' usando uma conexão transacional.
+     * conn Conexão de DB externa (controlada pelo Service).
+     * idMovimento:ID do movimento principal.
+     * idProduto: ID do produto envolvido.
+     * quantidade: Quantidade que entrou ou saiu.
+     * throws SQLException Em caso de erro de DB.
      */
-    public void inserirLinhaMovimento(int idMovimento, int idProduto, int quantidade) throws SQLException {
+    public void inserirLinhaMovimento(Connection conn, int idMovimento, int idProduto, int quantidade) throws SQLException {
         // NOTA: Assumindo que a coluna 'quantidade' foi adicionada à sua tabela linha_movimento.
         String sql = "INSERT INTO linha_movimento (id_movimento, id_produto, quantidade) VALUES (?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idMovimento);
             stmt.setInt(2, idProduto);

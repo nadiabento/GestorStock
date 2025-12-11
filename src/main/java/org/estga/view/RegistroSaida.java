@@ -4,7 +4,7 @@ import org.estga.data.ProdutoDAO;
 import org.estga.data.UtilizadorDAO;
 import org.estga.model.Produto;
 import org.estga.model.Utilizador;
-// import org.estga.service.MovimentoService; // Será usado na próxima etapa
+import org.estga.service.MovimentoService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +20,7 @@ public class RegistroSaida extends JFrame {
     // Instanciar os DAOs
     private final ProdutoDAO produtoDAO = new ProdutoDAO();
     private final UtilizadorDAO utilizadorDAO = new UtilizadorDAO();
-    // private final MovimentoService movimentoService = new MovimentoService();
+    private final MovimentoService movimentoService = new MovimentoService();
 
     // ID de utilizador padrão para testes (deve existir na tabela 'utilizador')
     private static final int ID_UTILIZADOR_TESTE = 1;
@@ -136,15 +136,13 @@ public class RegistroSaida extends JFrame {
                 return; // Impede a confirmação e o registo
             }
 
-            // 🚀 PONTO DE INTEGRAÇÃO COM SERVICE:
-            // Descomentar e usar a linha abaixo quando o MovimentoService estiver pronto
-            /*
+
             movimentoService.registrarSaida(
                 produtoSelecionado.getIdProduto(),
                 qtdSaida,
                 funcionarioSelecionado.getIdUtilizador()
             );
-            */
+
 
             JOptionPane.showMessageDialog(this,
                     String.format("Sucesso! Saída de %d unidades de '%s' registada.", qtdSaida, produtoSelecionado.getNome()),
