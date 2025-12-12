@@ -1,147 +1,96 @@
 package org.estga.model;
 
 /**
- * Representa a entidade Utilizador, mapeada à tabela 'utilizador' ou base de dados.
- *
- * Esta classe funciona como um JavaBean com os dados básicos necessários para
- * autenticação e autorização no sistema (e.g., nome, email, password hash e nível de acesso).
- *
- * @author Jéssica Pereira
- * @since 1.0
+ Representa a entidade Utilizador, mapeada à tabela 'utilizador'.
+ Esta classe funciona como um JavaBean com os dados básicos necessários para
+ autenticação e autorização no sistema (e.g., username, password hash e perfil de acesso).
  */
 public class Utilizador {
-    
-    // Identificador do utilizador (chave primária)
+
     private int idUtilizador;
-    // Nome do utilizador
-    private String nome;
-    // Email do utilizador
+    private String nome; // Usado para nome completo ou username
     private String email;
-    // Password do utilizador (Hash)
-    private String password;
-    // Nível de acesso (e.g., 1 - Administrador, 2 - Normal)
-    private int nivelAcesso;
+    private String password; // Deverá armazenar o hash da password
+    private String perfilString; // Perfil (e.g., 'ADMIN', 'OPERADOR', 'COMPRAS')
 
     /**
-     * Construtor vazio
+     Construtor vazio
      */
     public Utilizador() {
     }
 
     /**
-     * Construtor completo.
-     *
-     * @param idUtilizador Identificador do utilizador (PK)
-     * @param nome Nome completo do utilizador
-     * @param email Email do utilizador (login)
-     * @param password Hash da password
-     * @param nivelAcesso Nível de acesso/perm
+     * Construtor: completo para mapeamento de DB.
+     idUtilizador: Identificador do utilizador (PK)
+     nome: Nome completo ou username
+     email: Email do utilizador
+     password: Hash da password
+     perfilString: Perfil do utilizador (String)
      */
-    public Utilizador(int idUtilizador, String nome, String email, String password, int nivelAcesso) {
+    public Utilizador(int idUtilizador, String nome, String email, String password, String perfilString) {
         this.idUtilizador = idUtilizador;
         this.nome = nome;
         this.email = email;
         this.password = password;
-        this.nivelAcesso = nivelAcesso;
+        this.perfilString = perfilString;
     }
 
-    // Getters e Setters
-
     /**
-     * Obtém o identificador do utilizador.
-     *
-     * @return id do utilizador
+     Construtor para uso em DAOs (como o UtilizadorDAO.buscarTodos()),
+     que só devolvem 3 campos (id, username e perfil).
+     idUtilizador: ID do utilizador
+     username: Nome de login
+     perfil: String do perfil ('ADMIN', 'OPERADOR', etc.)
      */
+    public Utilizador(int idUtilizador, String username, String perfil) {
+        this.idUtilizador = idUtilizador;
+        this.nome = username;      // Mapeia o username para o campo 'nome'
+        this.perfilString = perfil; // Mapeia a string do perfil
+        // Os outros campos (email, password) ficam nulos, o que é aceitável para listas de seleção.
+    }
+
+
+    // --- Getters e Setters ---
+
     public int getIdUtilizador() {
         return idUtilizador;
     }
 
-    /**
-     * Define o identificador do utilizador.
-     *
-     * @param idUtilizador id do utilizador
-     */
     public void setIdUtilizador(int idUtilizador) {
         this.idUtilizador = idUtilizador;
     }
 
-    /**
-     * Obtém o nome do utilizador.
-     *
-     * @return nome do utilizador
-     */
     public String getNome() {
         return nome;
     }
 
-    /**
-     * Define o nome do utilizador.
-     *
-     * @param nome nome do utilizador
-     */
     public void setNome(String nome) {
         this.nome = nome;
     }
 
-    /**
-     * Obtém o email do utilizador.
-     *
-     * @return email do utilizador
-     */
     public String getEmail() {
         return email;
     }
 
-    /**
-     * Define o email do utilizador.
-     *
-     * @param email email do utilizador
-     */
     public void setEmail(String email) {
         this.email = email;
     }
 
-    /**
-     * Obtém a password (hash) do utilizador.
-     *
-     * @return hash da password
-     */
     public String getPassword() {
         return password;
     }
 
-    /**
-     * Define a password (deve ser uma hash).
-     *
-     * @param password hash da password
-     */
     public void setPassword(String password) {
         this.password = password;
     }
 
-    /**
-     * Obtém o nível de acesso do utilizador.
-     *
-     * @return nível de acesso (1 - Admin, 2 - Normal, etc.)
-     */
-    public int getNivelAcesso() {
-        return nivelAcesso;
+    public String getPerfilString() {
+        return perfilString;
     }
 
-    /**
-     * Define o nível de acesso do utilizador.
-     *
-     * @param nivelAcesso nível de acesso
-     */
-    public void setNivelAcesso(int nivelAcesso) {
-        this.nivelAcesso = nivelAcesso;
+    public void setPerfilString(String perfilString) {
+        this.perfilString = perfilString;
     }
-    
-    /**
-     * Retorna o nome do utilizador para ser exibido (pode ser usado em logs ou JComboBox).
-     *
-     * @return nome do utilizador
-     */
     @Override
     public String toString() {
         return nome;

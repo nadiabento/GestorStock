@@ -3,15 +3,11 @@ package org.estga.model;
 import java.math.BigDecimal;
 
 /**
- * Representa um produto do inventário.
- * Representa um produto do inventário.
- *
- * Esta classe funciona como um JavaBean que mapeia a entidade PRODUTO na base de dados.
- * Contém atributos essenciais para o controlo de inventário, nomeadamente o stock
- * atual e o stock mínimo que dispara alertas.
- *
- * @author Jéssica Pereira
- * @since 1.0
+ Representa um produto do inventário.
+ Representa um produto do inventário.
+ Esta classe funciona como um JavaBean que mapeia a entidade PRODUTO na base de dados.
+ atributos essenciais para o controlo de inventário, nomeadamente o stock
+ atual e o stock mínimo que dispara alertas.
  */
 public class Produto {
     private int idProduto;
@@ -24,7 +20,7 @@ public class Produto {
     private int stockAtual; // Campo agregado da tabela 'stock'
 
     /**
-     * Construtor vazio.
+     Construtor vazio.
      */
     public Produto() {
         // Construtor vazio
@@ -32,15 +28,14 @@ public class Produto {
 
     /**
      * Construtor COMPLETO para mapeamento de DB (8 argumentos).
-     *
-     * idProduto: Identificador do produto (PK)
-     * nome: Nome comercial do produto
-     * descricao: Descrição detalhada do produto
-     * precoUnitario: Preço unitário (BigDecimal) em euros
-     * stockMinimo: Número mínimo de unidades
-     * stockMaximo: Número máximo de unidades
-     * idFornecedor: Identificador do fornecedor associado
-     * stockAtual: Stock actual disponível
+     idProduto: Identificador do produto (PK)
+     nome: Nome comercial do produto
+     descricao: Descrição detalhada do produto
+     precoUnitario: Preço unitário (BigDecimal) em euros
+     stockMinimo: Número mínimo de unidades
+     stockMaximo: Número máximo de unidades
+     idFornecedor: Identificador do fornecedor associado
+     stockAtual: Stock actual disponível
      */
     public Produto(int idProduto, String nome, String descricao, BigDecimal precoUnitario, int stockMinimo, int stockMaximo, int idFornecedor, int stockAtual) {
         this.idProduto = idProduto;
@@ -54,8 +49,8 @@ public class Produto {
     }
 
     /**
-     * Construtor Padrão (7 argumentos).
-     * Assume stockMaximo = 0.
+     Construtor Padrão (7 argumentos).
+     Assume stockMaximo = 0.
      */
     public Produto(int idProduto, String nome, String descricao, BigDecimal precoUnitario, int stockMinimo, int idFornecedor, int stockAtual) {
         this.idProduto = idProduto;
@@ -152,9 +147,8 @@ public class Produto {
     }
 
     /**
-     * Retorna o nome do produto para ser exibido corretamente nos JComboBox (ex: no Registo de Entrada).
-     *
-     * @return nome do produto
+     Retorna o nome do produto para ser exibido corretamente nos JComboBox (ex: no Registo de Entrada).
+     return nome do produto
      */
     @Override
     public String toString() {

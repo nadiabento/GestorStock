@@ -11,12 +11,15 @@ import java.util.List;
 public class UtilizadorDAO {
 
     /**
-     * Busca todos os utilizadores (funcionários) no sistema.
-     * @return Lista de objetos Utilizador.
+     Busca todos os utilizadores (funcionários) no sistema com perfis
+     que podem realizar operações de stock (ADMIN e OPERADOR).
+     return Lista de objetos Utilizador (com ID, Username e Perfil).
      */
     public List<Utilizador> buscarTodos() {
         List<Utilizador> utilizadores = new ArrayList<>();
-        // Assumindo que apenas OPERADOR e ADMIN podem fazer saídas
+
+        // A query seleciona os perfis que podem estar envolvidos em movimentação de stock.
+        // O perfil 'COMPRAS' foi excluído desta lista de Saída, conforme a lógica do projeto.
         String sql = "SELECT id_utilizador, username, perfil FROM utilizador WHERE perfil IN ('ADMIN', 'OPERADOR') ORDER BY username";
 
         try (Connection conn = DBConnection.getConnection();
@@ -24,6 +27,7 @@ public class UtilizadorDAO {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
+                // Usa o construtor de 3 argumentos (id, username, perfil) que adicionamos ao modelo Utilizador.
                 Utilizador utilizador = new Utilizador(
                         rs.getInt("id_utilizador"),
                         rs.getString("username"),
