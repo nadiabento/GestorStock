@@ -15,11 +15,10 @@ public class Dashboard {
     private JPanel panel1;
     private JButton sairButton;
     private JButton relatóriosButton;
-    private JButton produtos;
+    private JButton produtos; // Botão para gestão CRUD de produtos
 
     private JButton SaidaProdutosButton;
     private JButton EntradaProdutosButton;
-    // --------------------------------------------------------------------
 
     private JScrollPane scrollPane1;
     private JTable tabAlertas;
@@ -29,14 +28,15 @@ public class Dashboard {
     public Dashboard(String perfil) {
         this.perfilAtual = perfil;
 
-        configurarPermissoes();
-        carregarTabelaAlertasBD();
+        configurarPermissoes(); // 1. Aplica as regras de acesso
+        configurarAcoes();      // 2. Configura os Listeners dos botões
+        carregarTabelaAlertasBD(); // 3. Carrega alertas de stock
 
         if (sairButton != null) {
             sairButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-
+                    // Lógica para voltar à tela de Login
                     SwingUtilities.getWindowAncestor(panel1).dispose();
 
                     JFrame frameLogin = new JFrame("Login SGS");
@@ -54,17 +54,65 @@ public class Dashboard {
         return panel1;
     }
 
-    private void configurarPermissoes() {
-        if (perfilAtual == null) perfilAtual = "OPERADOR";
+    // ====================================================================
+    // 1. LÓGICA DE PERMISSÕES
+    // ====================================================================
 
-        if ("OPERADOR".equalsIgnoreCase(perfilAtual)) {
-            if (relatóriosButton != null) {
-                relatóriosButton.setEnabled(false);
-                relatóriosButton.setToolTipText("Acesso reservado a Admin/Compras");
-            }
-        }
+    private void configurarPermissoes() {
+        if (perfilAtual == null) perfilAtual = ""; // Garante que a string não é nula
+
+        boolean isCompras = "COMPRAS".equalsIgnoreCase(perfilAtual);
+        boolean isOperador = "OPERADOR".equalsIgnoreCase(perfilAtual);
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(perfilAtual);
+
+        // Regras de Entrada
+        boolean podeEntrada = isAdmin || isCompras || isOperador;
+        if (EntradaProdutosButton != null) EntradaProdutosButton.setEnabled(podeEntrada);
+
+        // Regras de Saída
+        boolean podeSaida = isAdmin || isOperador; // Compras geralmente não faz Saída
+        if (SaidaProdutosButton != null) SaidaProdutosButton.setEnabled(podeSaida);
+
+        // Regras de Relatórios
+        boolean podeRelatorios = isAdmin || isCompras;
+        if (relatóriosButton != null) relatóriosButton.setEnabled(podeRelatorios);
+
+        // Regras de CRUD de Produtos (Gestão de cadastro)
+        boolean podeGerirProdutos = isAdmin || isCompras;
+        if (produtos != null) produtos.setEnabled(podeGerirProdutos);
+
         System.out.println("Dashboard iniciado como: " + perfilAtual);
     }
+
+    // ====================================================================
+    // 2. AÇÕES DOS BOTÕES (Listeners)
+    // ====================================================================
+
+    private void configurarAcoes() {
+        // Listener para o botão ENTRADA DE PRODUTOS
+        if (EntradaProdutosButton != null) {
+            EntradaProdutosButton.addActionListener(e -> {
+                JFrame dashboardFrame = (JFrame) SwingUtilities.getWindowAncestor(panel1);
+                if (dashboardFrame != null) dashboardFrame.setVisible(false);
+                // NOTA: RegistroEntrada precisará do ID do Utilizador, que não está aqui.
+                // Usando construtor simples por agora.
+                new RegistroEntrada(dashboardFrame).setVisible(true);
+            });
+        }
+
+        // Listener para o botão SAÍDA DE PRODUTOS
+        if (SaidaProdutosButton != null) {
+            SaidaProdutosButton.addActionListener(e -> {
+                JFrame dashboardFrame = (JFrame) SwingUtilities.getWindowAncestor(panel1);
+                if (dashboardFrame != null) dashboardFrame.setVisible(false);
+                new RegistroSaida(dashboardFrame).setVisible(true);
+            });
+        }
+    }
+
+    // ====================================================================
+    // 3. CARREGAMENTO DE DADOS (Alertas)
+    // ====================================================================
 
     private void carregarTabelaAlertasBD() {
         if (tabAlertas == null) return;
@@ -72,6 +120,7 @@ public class Dashboard {
         String[] colunas = {"ID", "Produto", "Stock Atual", "Mínimo", "Estado"};
         DefaultTableModel modelo = new DefaultTableModel(colunas, 0);
 
+        // A query utiliza JOIN para ligar produto e stock e filtrar apenas os que estão abaixo do mínimo
         String sql = "SELECT p.id_produto, p.nome, s.quantidade, p.stock_minimo " +
                 "FROM produto p " +
                 "JOIN stock s ON p.id_produto = s.id_produto " +
@@ -94,7 +143,7 @@ public class Dashboard {
                 int qtd = rs.getInt("quantidade");
                 int min = rs.getInt("stock_minimo");
 
-                String estado = (qtd == 0) ? "⛔ RUTURA" : "⚠️ BAIXO";
+                String estado = (qtd == 0) ? " RUTURA" : " BAIXO";
 
                 modelo.addRow(new Object[]{id, nome, qtd, min, estado});
             }
