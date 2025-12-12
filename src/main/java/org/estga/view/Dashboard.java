@@ -13,9 +13,14 @@ import java.sql.SQLException;
 
 public class Dashboard {
     private JPanel panel1;
-    private JButton produtos;
     private JButton sairButton;
     private JButton relatóriosButton;
+    private JButton produtos;
+
+    private JButton SaidaProdutosButton;
+    private JButton EntradaProdutosButton;
+    // --------------------------------------------------------------------
+
     private JScrollPane scrollPane1;
     private JTable tabAlertas;
 
@@ -25,7 +30,6 @@ public class Dashboard {
         this.perfilAtual = perfil;
 
         configurarPermissoes();
-
         carregarTabelaAlertasBD();
 
         if (sairButton != null) {

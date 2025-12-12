@@ -16,12 +16,12 @@ public class Login {
         btnEntrar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                realizarLogin();
+                fazerLogin();
             }
         });
     }
 
-    private void realizarLogin() {
+    private void fazerLogin() {
         String username = txtUser.getText();
         String password = new String(txtPass.getPassword());
 
@@ -33,13 +33,14 @@ public class Login {
             abrirDashboard(perfil);
         } else {
             JOptionPane.showMessageDialog(panel1,
-                    "Login falhou!\nVerifica o utilizador, a password ou a tua conexão à internet.",
-                    "Erro de Acesso",
+                    "Dados incorretos ou erro de conexão.\nVerifica se a VPN está ligada!",
+                    "Erro de Login",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void abrirDashboard(String perfil) {
+
         SwingUtilities.getWindowAncestor(panel1).dispose();
 
         JFrame frameDash = new JFrame("SGS - Dashboard (" + perfil + ")");
@@ -48,14 +49,14 @@ public class Login {
 
         frameDash.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frameDash.setSize(900, 600);
-        frameDash.setLocationRelativeTo(null); // Centra no ecrã
+        frameDash.setLocationRelativeTo(null);
         frameDash.setVisible(true);
     }
 
     public JPanel getPanel() {
         return panel1;
     }
-    
+
     public static void main(String[] args) {
         JFrame frame = new JFrame("Login SGS");
         frame.setContentPane(new Login().panel1);
