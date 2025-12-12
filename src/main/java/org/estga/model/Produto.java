@@ -4,8 +4,14 @@ import java.math.BigDecimal;
 
 /**
  * Representa um produto do inventário.
- * Representa a entidade Produto, mapeada à tabela 'produto' na base de dados.
- * Inclui o stockAtual, que é um campo agregado da tabela 'stock'.
+ * Representa um produto do inventário.
+ *
+ * Esta classe funciona como um JavaBean que mapeia a entidade PRODUTO na base de dados.
+ * Contém atributos essenciais para o controlo de inventário, nomeadamente o stock
+ * atual e o stock mínimo que dispara alertas.
+ *
+ * @author Jéssica Pereira
+ * @since 1.0
  */
 public class Produto {
     private int idProduto;
@@ -63,7 +69,7 @@ public class Produto {
     }
 
 
-    // --- Getters e Setters ---
+    // Getters e Setters
 
     /** Obtém o identificador do produto. */
     public int getIdProduto() {
@@ -147,6 +153,8 @@ public class Produto {
 
     /**
      * Retorna o nome do produto para ser exibido corretamente nos JComboBox (ex: no Registo de Entrada).
+     *
+     * @return nome do produto
      */
     @Override
     public String toString() {
