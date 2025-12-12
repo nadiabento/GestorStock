@@ -1,4 +1,4 @@
 package org.estga.model;
 
-public class test{
+public class Stock {
 }
