@@ -120,11 +120,11 @@ public class Dashboard {
         String[] colunas = {"ID", "Produto", "Stock Atual", "Mínimo", "Estado"};
         DefaultTableModel modelo = new DefaultTableModel(colunas, 0);
 
-        // A query utiliza JOIN para ligar produto e stock e filtrar apenas os que estão abaixo do mínimo
+        // --- ALTERAÇÃO AQUI: Removi o WHERE para mostrar todos os produtos ---
         String sql = "SELECT p.id_produto, p.nome, s.quantidade, p.stock_minimo " +
                 "FROM produto p " +
-                "JOIN stock s ON p.id_produto = s.id_produto " +
-                "WHERE s.quantidade <= p.stock_minimo";
+                "JOIN stock s ON p.id_produto = s.id_produto";
+        // ---------------------------------------------------------------------
 
         try (Connection conn = DBConnection.getConnection()) {
 
@@ -143,7 +143,15 @@ public class Dashboard {
                 int qtd = rs.getInt("quantidade");
                 int min = rs.getInt("stock_minimo");
 
-                String estado = (qtd == 0) ? " RUTURA" : " BAIXO";
+                // --- Lógica visual melhorada ---
+                String estado;
+                if (qtd == 0) {
+                    estado = "⛔ RUTURA";
+                } else if (qtd <= min) {
+                    estado = "⚠️ BAIXO";
+                } else {
+                    estado = "✅ OK";
+                }
 
                 modelo.addRow(new Object[]{id, nome, qtd, min, estado});
             }
