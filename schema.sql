@@ -91,7 +91,7 @@ INSERT IGNORE INTO produto (nome, descricao, preco_unitario, stock_minimo, id_fo
     ('Portátil Lenovo ThinkPad', 'Intel i5, 16GB RAM, 512GB SSD', 850.00, 2, 1),
     ('Rato Wireless Logitech', 'MX Master 3', 99.90, 5, 1),
     ('Monitor Dell 24"', 'IPS Full HD', 180.00, 3, 2),
-    ('Cabo HDMI 2m', 'Cabo banhado a ouro', 10.00, 20, 2);
+    ('Cabo HDMI 2m', 'Cabo banhado a ouro', 10.00, 20, 2),
     ('Macbook Air', 'M4', 1024.00, 15, 7);
 
 -- Inserir Stock Inicial (Simulação)
@@ -99,4 +99,5 @@ INSERT IGNORE INTO stock (id_produto, quantidade) VALUES
     (1, 10), -- 10 Portáteis
     (2, 50), -- 50 Ratos
     (3, 1),  -- 1 Monitor (ALERTA: Abaixo do mínimo de 3!)
-    (4, 100); -- 100 Cabos
+    (4, 100), -- 100 Cabos
+    (5, 15); -- 15 Portáteis
