@@ -92,6 +92,7 @@ INSERT IGNORE INTO produto (nome, descricao, preco_unitario, stock_minimo, id_fo
     ('Rato Wireless Logitech', 'MX Master 3', 99.90, 5, 1),
     ('Monitor Dell 24"', 'IPS Full HD', 180.00, 3, 2),
     ('Cabo HDMI 2m', 'Cabo banhado a ouro', 10.00, 20, 2);
+    ('Macbook Air', 'M4', 1024.00, 15, 7);
 
 -- Inserir Stock Inicial (Simulação)
 INSERT IGNORE INTO stock (id_produto, quantidade) VALUES
