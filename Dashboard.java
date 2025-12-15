@@ -3,6 +3,8 @@ package org.estga.view;
 import org.estga.data.DBConnection;
 
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,43 +22,34 @@ public class Dashboard {
     private JButton EntradaProdutosButton;
     private JScrollPane scrollPane1;
     private JTable tabAlertas;
-    private JButton pesquisarButton;
-    private JComboBox comboBox1;
-    private JTextField textField1;
     private String perfilAtual;
-
-    // Variável para o Auto-Refresh
-    private Timer timerAtualizacao;
 
     public Dashboard(String perfil) {
         this.perfilAtual = perfil;
 
         configurarPermissoes();
         configurarAcoes();
-
-        // 1. Carrega a primeira vez imediatamente
         carregarTabelaAlertasBD();
 
-        // 2. SISTEMA DE AUTO-REFRESH (A cada 2 segundos)
-        // Isto garante que a tabela atualiza sozinha, sem precisares de fazer nada.
-        timerAtualizacao = new Timer(2000, new ActionListener() {
+        panel1.addAncestorListener(new AncestorListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                // Só atualiza se a janela estiver visível para não gastar internet
-                if (panel1.isShowing()) {
-                    carregarTabelaAlertasBD();
-                }
+            public void ancestorAdded(AncestorEvent event) {
+                carregarTabelaAlertasBD();
+            }
+
+            @Override
+            public void ancestorRemoved(AncestorEvent event) {
+            }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {
             }
         });
-        timerAtualizacao.start(); // Inicia o relógio
 
         if (sairButton != null) {
             sairButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // Para o relógio antes de sair
-                    if (timerAtualizacao != null) timerAtualizacao.stop();
-
                     SwingUtilities.getWindowAncestor(panel1).dispose();
 
                     JFrame frameLogin = new JFrame("Login SGS");
@@ -98,8 +91,7 @@ public class Dashboard {
         if (EntradaProdutosButton != null) {
             EntradaProdutosButton.addActionListener(e -> {
                 JFrame dashboardFrame = (JFrame) SwingUtilities.getWindowAncestor(panel1);
-                // Não fechamos o dashboard, apenas escondemos ou deixamos atrás
-                // O Timer continua a correr, mas verifica o isShowing()
+                if (dashboardFrame != null) dashboardFrame.setVisible(false);
                 new RegistroEntrada(dashboardFrame).setVisible(true);
             });
         }
@@ -107,6 +99,7 @@ public class Dashboard {
         if (SaidaProdutosButton != null) {
             SaidaProdutosButton.addActionListener(e -> {
                 JFrame dashboardFrame = (JFrame) SwingUtilities.getWindowAncestor(panel1);
+                if (dashboardFrame != null) dashboardFrame.setVisible(false);
                 new RegistroSaida(dashboardFrame).setVisible(true);
             });
         }
@@ -115,62 +108,42 @@ public class Dashboard {
     private void carregarTabelaAlertasBD() {
         if (tabAlertas == null) return;
 
-        // Guardar a seleção atual (para o utilizador não perder o clique quando atualiza)
-        int linhaSelecionada = tabAlertas.getSelectedRow();
-
         String[] colunas = {"ID", "Produto", "Stock Atual", "Mínimo", "Estado"};
         DefaultTableModel modelo = new DefaultTableModel(colunas, 0);
 
-        String sql = "SELECT p.id_produto, p.nome, COALESCE(s.quantidade, 0) as quantidade, p.stock_minimo " +
+        String sql = "SELECT p.id_produto, p.nome, s.quantidade, p.stock_minimo " +
                 "FROM produto p " +
-                "LEFT JOIN stock s ON p.id_produto = s.id_produto";
+                "JOIN stock s ON p.id_produto = s.id_produto " +
+                "WHERE s.quantidade <= p.stock_minimo";
 
         try (Connection conn = DBConnection.getConnection()) {
 
             if (conn == null) {
-                modelo.addRow(new Object[]{"Erro", "Sem Conexão (VPN?)", 0, 0, "OFFLINE"});
+                modelo.addRow(new Object[]{"Erro", "Sem Conexão", 0, 0, "OFFLINE"});
                 tabAlertas.setModel(modelo);
                 return;
             }
 
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
-            boolean temDados = false;
 
             while (rs.next()) {
-                temDados = true;
                 int id = rs.getInt("id_produto");
                 String nome = rs.getString("nome");
                 int qtd = rs.getInt("quantidade");
                 int min = rs.getInt("stock_minimo");
 
-                String estado;
-                if (qtd == 0) {
-                    estado = "⛔ RUTURA";
-                } else if (qtd <= min) {
-                    estado = "⚠️ BAIXO";
-                } else {
-                    estado = "✅ OK";
-                }
+                String estado = (qtd == 0) ? "⛔ RUTURA" : "⚠️ BAIXO";
 
                 modelo.addRow(new Object[]{id, nome, qtd, min, estado});
             }
 
-            if (!temDados) {
-                modelo.addRow(new Object[]{0, "Nenhum Produto na BD", 0, 0, "---"});
-            }
-
         } catch (SQLException e) {
-            e.printStackTrace(); // Opcional: comentar se encher muito a consola
-            modelo.addRow(new Object[]{"Erro", "Falha SQL", 0, 0, "Erro"});
+            e.printStackTrace();
+            modelo.addRow(new Object[]{"Erro", "Falha SQL", 0, 0, e.getMessage()});
         }
 
         tabAlertas.setModel(modelo);
         tabAlertas.setRowHeight(25);
-
-        // Tentar repor a seleção se possível
-        if (linhaSelecionada >= 0 && linhaSelecionada < tabAlertas.getRowCount()) {
-            tabAlertas.setRowSelectionInterval(linhaSelecionada, linhaSelecionada);
-        }
     }
 }
