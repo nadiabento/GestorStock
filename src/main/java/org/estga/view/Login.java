@@ -33,7 +33,7 @@ public class Login {
             abrirDashboard(perfil);
         } else {
             JOptionPane.showMessageDialog(panel1,
-                    "Dados incorretos ou erro de conexão.\nVerifica se a VPN está ligada!",
+                    "Dados incorretos ou erro de conexão.\n",
                     "Erro de Login",
                     JOptionPane.ERROR_MESSAGE);
         }
