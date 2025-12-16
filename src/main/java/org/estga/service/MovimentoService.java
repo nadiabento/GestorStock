@@ -1,155 +1,187 @@
 package org.estga.service;
 
 import org.estga.data.DBConnection;
-import org.estga.data.MovimentoDAO;
-import org.estga.data.StockDAO;
-
-import java.sql.Connection;
-import java.sql.SQLException;
+import javax.swing.DefaultComboBoxModel;
+import java.sql.*;
+import java.util.Vector;
 
 public class MovimentoService {
 
-    private final MovimentoDAO movimentoDAO;
-    private final StockDAO stockDAO;
+    // ==================================================================================
+    // 1. MÉTODOS PARA A INTERFACE GRÁFICA (PREENCHER COMBOBOXES)
+    // ==================================================================================
 
-    public MovimentoService() {
-        this.movimentoDAO = new MovimentoDAO();
-        this.stockDAO = new StockDAO();
+    /**
+     * Devolve uma lista de nomes de produtos para a Combobox.
+     */
+    public DefaultComboBoxModel<String> getModelProdutos() {
+        return getListaNomes("produto");
     }
 
     /**
-     * Regista uma entrada de stock. Esta operação é ATÓMICA (Transação de DB).
-     * * 1. Abre Conexão e Desliga AutoCommit.
-     * 2. Insere Movimento -> Insere LinhaMovimento -> Atualiza Stock.
-     * 3. Se tudo OK: COMMIT.
-     * 4. Se ERRO: ROLLBACK.
-     * idProduto: ID do produto.
-     * quantidade: Quantidade a entrar.
-     * idFornecedor: ID do fornecedor (não usado na lógica de stock, mas pode ser útil para relatórios).
-     * idUtilizador: ID do utilizador que regista.
-     * throws Exception Se a quantidade for inválida ou ocorrer um erro de DB (transacional).
+     * Devolve uma lista de nomes de fornecedores para a Combobox.
      */
-    public void registrarEntrada(int idProduto, int quantidade, int idFornecedor, int idUtilizador) throws Exception {
-        if (quantidade <= 0) {
-            throw new IllegalArgumentException("A quantidade de entrada deve ser positiva.");
-        }
+    public DefaultComboBoxModel<String> getModelFornecedores() {
+        return getListaNomes("fornecedor");
+    }
 
+    /**
+     * Devolve uma lista de nomes de clientes para a Combobox.
+     */
+    public DefaultComboBoxModel<String> getModelClientes() {
+        return getListaNomes("cliente");
+    }
+
+    // Metodo genérico auxiliar para ir buscar nomes a qualquer tabela
+    private DefaultComboBoxModel<String> getListaNomes(String tabela) {
+        Vector<String> lista = new Vector<>();
+        String sql = "SELECT nome FROM " + tabela + " ORDER BY nome";
+
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                lista.add(rs.getString("nome"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new DefaultComboBoxModel<>(lista);
+    }
+
+    // ==================================================================================
+    // 2. LÓGICA DE REGISTO (TRANSAÇÕES + CONVERSÃO NOME -> ID)
+    // ==================================================================================
+
+    /**
+     * Regista uma entrada de material.
+     * Recebe Strings (da GUI) e converte para IDs internamente.
+     */
+    public boolean registarEntrada(String nomeProduto, int qtd, String nomeFornecedor, int idUtilizador) {
+        if (qtd <= 0) return false;
+        // Nota: Enviamos 'ENTRADA' para corresponder ao ENUM da Base de Dados
+        return executarMovimento(nomeProduto, qtd, "ENTRADA", nomeFornecedor, null, idUtilizador);
+    }
+
+    /**
+     * Regista uma saída de material.
+     * Verifica se há stock suficiente antes de gravar.
+     */
+    public boolean registarSaida(String nomeProduto, int qtd, String nomeCliente, int idUtilizador) {
+        if (qtd <= 0) return false;
+        // Nota: Enviamos 'SAIDA' (sem acento) para corresponder ao ENUM da Base de Dados
+        return executarMovimento(nomeProduto, qtd, "SAIDA", null, nomeCliente, idUtilizador);
+    }
+
+    /**
+     * O MOTOR DO SISTEMA:
+     * Este metodo faz tudo numa única transação segura:
+     * 1. Descobre os IDs.
+     * 2. Verifica Stock (se for saída).
+     * 3. Cria o Movimento.
+     * 4. Cria a Linha de Movimento.
+     * 5. Atualiza o Stock.
+     */
+    private boolean executarMovimento(String prodNome, int qtd, String tipo, String fornNome, String cliNome, int idUser) {
         Connection conn = null;
         try {
-            // 1. Obtém a Conexão e Inicia a Transação
             conn = DBConnection.getConnection();
-            if (conn == null) {
-                // Se a DBConnection falhar (erro crítico), lança exceção imediatamente
-                throw new SQLException("Falha ao obter conexão com a base de dados. Verifique a configuração.");
+            conn.setAutoCommit(false);
+
+            // A. Descobrir os IDs baseados nos Nomes
+            int idProd = buscarId(conn, "produto", prodNome);
+            if (idProd == 0) {
+                System.out.println(" Produto não encontrado: " + prodNome);
+                conn.rollback();
+                return false;
             }
-            conn.setAutoCommit(false); // ATIVA o modo de transação
 
-            // 2. Executa as operações transacionais
+            // Verificação extra para SAÍDA: Há stock suficiente?
+            if (tipo.equals("SAIDA")) { // Importante: Sem acento, como no schema.sql
+                if (!verificarStockSuficiente(conn, idProd, qtd)) {
+                    System.out.println(" Erro: Stock insuficiente para o produto " + prodNome);
+                    conn.rollback();
+                    return false;
+                }
+            }
 
-            // 2.1. Grava o Movimento principal
-            int idMovimento = movimentoDAO.inserirMovimento(conn, "ENTRADA", idUtilizador);
+            // B. Inserir Movimento (Cabeçalho)
+            // O id_movimento é gerado automaticamente pelo Auto_Increment
+            String sqlMov = "INSERT INTO movimento (tipo_movimento, id_utilizador, data_movimento) VALUES (?, ?, NOW())";
+            PreparedStatement stmtMov = conn.prepareStatement(sqlMov, Statement.RETURN_GENERATED_KEYS);
+            stmtMov.setString(1, tipo);
+            stmtMov.setInt(2, idUser);
+            stmtMov.executeUpdate();
 
-            // 2.2. Grava a Linha de Movimento (detalhe)
-            movimentoDAO.inserirLinhaMovimento(conn, idMovimento, idProduto, quantidade);
+            // Recuperar o ID do movimento que acabou de ser criado
+            ResultSet rsKeys = stmtMov.getGeneratedKeys();
+            int idMov = 0;
+            if (rsKeys.next()) {
+                idMov = rsKeys.getInt(1);
+            } else {
+                throw new SQLException("Falha ao criar movimento, nenhum ID obtido.");
+            }
 
-            // 2.3. Atualiza o Stock (aumenta)
-            stockDAO.atualizarStock(conn, idProduto, quantidade);
+            // C. Inserir Linha de Movimento (Detalhes)
+            String sqlLinha = "INSERT INTO linha_movimento (id_movimento, id_produto, quantidade) VALUES (?, ?, ?)";
+            PreparedStatement stmtLinha = conn.prepareStatement(sqlLinha);
+            stmtLinha.setInt(1, idMov);
+            stmtLinha.setInt(2, idProd);
+            stmtLinha.setInt(3, qtd);
+            stmtLinha.executeUpdate();
 
-            // 3. Sucesso: Confirma todas as operações na BD
+            // D. Atualizar Tabela de Stock
+            String sqlStock;
+            if (tipo.equals("ENTRADA")) {
+                sqlStock = "UPDATE stock SET quantidade = quantidade + ? WHERE id_produto = ?";
+            } else {
+                sqlStock = "UPDATE stock SET quantidade = quantidade - ? WHERE id_produto = ?";
+            }
+            PreparedStatement stmtStock = conn.prepareStatement(sqlStock);
+            stmtStock.setInt(1, qtd);
+            stmtStock.setInt(2, idProd);
+            stmtStock.executeUpdate();
+
             conn.commit();
+            System.out.println(" Movimento registado com sucesso!");
+            return true;
 
         } catch (SQLException e) {
-            // 4. Falha: Desfaz tudo o que foi feito na transação
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException rb) {
-                    System.err.println("Erro durante o rollback: " + rb.getMessage());
-                }
-            }
-            // Relança uma exceção para a camada View
-            throw new Exception("Erro transacional ao registar Entrada. Operações desfeitas: " + e.getMessage());
+            e.printStackTrace();
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
         } finally {
-            // 5. Fecha a Conexão
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // Restaura o modo padrão (boa prática)
-                    conn.close();
-                } catch (SQLException close) {
-                    // Ignora, mas imprime erro se o fechamento falhar
-                    System.err.println("Aviso: Falha ao fechar a conexão de DB: " + close.getMessage());
-                }
-            }
+            try {
+                if (conn != null) conn.setAutoCommit(true);
+            } catch (SQLException ex) { ex.printStackTrace(); }
         }
     }
 
+    // ==================================================================================
+    // 3. MÉTODOS AUXILIARES SQL (Privados)
+    // ==================================================================================
 
-    /**
-     * Regista uma saída de stock. Esta operação é ATÓMICA (Transação de DB).
-     * idProduto: ID do produto.
-     * quantidade: Quantidade a sair.
-     * idUtilizador: ID do utilizador que regista.
-     * throws Exception Se a quantidade for inválida, o stock for insuficiente, ou ocorrer um erro de DB.
-     */
-    public void registrarSaida(int idProduto, int quantidade, int idUtilizador) throws Exception {
-        if (quantidade <= 0) {
-            throw new IllegalArgumentException("A quantidade de saída deve ser positiva.");
+    private int buscarId(Connection conn, String tabela, String nome) throws SQLException {
+        if (nome == null) return 0;
+        String sql = "SELECT id_" + tabela + " FROM " + tabela + " WHERE nome = ?";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setString(1, nome);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) return rs.getInt(1);
+        return 0;
+    }
+
+    private boolean verificarStockSuficiente(Connection conn, int idProduto, int qtdSaida) throws SQLException {
+        String sql = "SELECT quantidade FROM stock WHERE id_produto = ?";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, idProduto);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            int stockAtual = rs.getInt("quantidade");
+            return stockAtual >= qtdSaida;
         }
-
-        // Validação de Stock (OPERAÇÃO DE LEITURA ANTES DA TRANSAÇÃO)
-        // É importante que esta validação seja feita ANTES de iniciar a transação
-        int stockAtual = stockDAO.consultarQuantidade(idProduto);
-
-        if (quantidade > stockAtual) {
-            // Lança uma exceção que será capturada pela View para mostrar a mensagem de stock insuficiente.
-            throw new IllegalStateException(String.format("Stock insuficiente! Apenas %d unidades disponíveis.", stockAtual));
-        }
-
-        Connection conn = null;
-        try {
-            // 1. Obtém a Conexão e Inicia a Transação
-            conn = DBConnection.getConnection();
-            if (conn == null) {
-                throw new SQLException("Falha ao obter conexão com a base de dados. Verifique a configuração.");
-            }
-            conn.setAutoCommit(false); // ATIVA o modo de transação
-
-            // 2. Executa as operações transacionais
-
-            // 2.1. Grava o Movimento principal
-            int idMovimento = movimentoDAO.inserirMovimento(conn, "SAÍDA", idUtilizador);
-
-            // 2.2. Grava a Linha de Movimento (detalhe)
-            movimentoDAO.inserirLinhaMovimento(conn, idMovimento, idProduto, quantidade);
-
-            // 2.3. Atualiza o Stock (diminui)
-            // Passamos a quantidade negativa para que o StockDAO faça a subtração
-            stockDAO.atualizarStock(conn, idProduto, -quantidade);
-
-            // 3. Sucesso: Confirma todas as operações na BD
-            conn.commit();
-
-        } catch (SQLException e) {
-            // 4. Falha: Desfaz tudo o que foi feito na transação
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException rb) {
-                    System.err.println("Erro durante o rollback: " + rb.getMessage());
-                }
-            }
-            // Relança uma exceção para a camada View
-            throw new Exception("Erro transacional ao registar Saída. Operações desfeitas: " + e.getMessage());
-        } finally {
-            // 5. Fecha a Conexão
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // Restaura o modo padrão
-                    conn.close();
-                } catch (SQLException close) {
-                    System.err.println("Aviso: Falha ao fechar a conexão de DB: " + close.getMessage());
-                }
-            }
-        }
+        return false;
     }
 }
