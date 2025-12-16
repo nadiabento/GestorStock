@@ -20,7 +20,7 @@ public class Produto {
     private int stockAtual; // Campo agregado da tabela 'stock'
 
     /**
-     Construtor vazio.
+     * Construtor vazio.
      */
     public Produto() {
         // Construtor vazio
@@ -28,14 +28,15 @@ public class Produto {
 
     /**
      * Construtor COMPLETO para mapeamento de DB (8 argumentos).
-     idProduto: Identificador do produto (PK)
-     nome: Nome comercial do produto
-     descricao: Descrição detalhada do produto
-     precoUnitario: Preço unitário (BigDecimal) em euros
-     stockMinimo: Número mínimo de unidades
-     stockMaximo: Número máximo de unidades
-     idFornecedor: Identificador do fornecedor associado
-     stockAtual: Stock actual disponível
+     *
+     * @param idProduto Identificador do produto (PK)
+     * @param nome Nome comercial do produto
+     * @param descricao Descrição detalhada do produto
+     * @param precoUnitario Preço unitário (BigDecimal)
+     * @param stockMinimo Número mínimo de unidades que dispara alerta
+     * @param stockMaximo Número máximo de unidades para controlo
+     * @param idFornecedor Identificador do fornecedor associado
+     * @param stockAtual Stock actual disponível
      */
     public Produto(int idProduto, String nome, String descricao, BigDecimal precoUnitario, int stockMinimo, int stockMaximo, int idFornecedor, int stockAtual) {
         this.idProduto = idProduto;
@@ -49,8 +50,16 @@ public class Produto {
     }
 
     /**
-     Construtor Padrão (7 argumentos).
-     Assume stockMaximo = 0.
+     * Construtor Padrão (7 argumentos).
+     * Assume stockMaximo = 0.
+     *
+     * @param idProduto Identificador do produto (PK)
+     * @param nome Nome comercial do produto
+     * @param descricao Descrição do produto
+     * @param precoUnitario Preço unitário (BigDecimal)
+     * @param stockMinimo Stock mínimo configurado
+     * @param idFornecedor Identificador do fornecedor associado
+     * @param stockAtual Stock actual disponível
      */
     public Produto(int idProduto, String nome, String descricao, BigDecimal precoUnitario, int stockMinimo, int idFornecedor, int stockAtual) {
         this.idProduto = idProduto;
@@ -147,8 +156,8 @@ public class Produto {
     }
 
     /**
-     Retorna o nome do produto para ser exibido corretamente nos JComboBox (ex: no Registo de Entrada).
-     return nome do produto
+     * Retorna o nome do produto para ser exibido nos componentes UI (ex: JComboBox).
+     * @return nome do produto
      */
     @Override
     public String toString() {
