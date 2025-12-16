@@ -15,7 +15,7 @@ public class Utilizador {
         this.idUtilizador = idUtilizador;
         this.username = username;
         this.password = password;
-        this.perfilString = perfilString;
+        this.perfil = perfil;
     }
 
     /**
@@ -27,8 +27,8 @@ public class Utilizador {
      */
     public Utilizador(int idUtilizador, String username, String perfil) {
         this.idUtilizador = idUtilizador;
-        this.nome = username;      // Mapeia o username para o campo 'nome'
-        this.perfilString = perfil; // Mapeia a string do perfil
+        this.username = username;      // Mapeia o username para o campo 'nome'
+        this.perfil = perfil; // Mapeia a string do perfil
         // Os outros campos (email, password) ficam nulos, o que é aceitável para listas de seleção.
     }
 
@@ -58,59 +58,28 @@ public class Utilizador {
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    /**
-     * Define o nome (ou username) do utilizador.
-     * @param nome nome a definir
-     */
+
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
-    /**
-     * Obtém o email do utilizador.
-     * @return email
-     */
     public String getPerfil() { return perfil; }
     public void setPerfil(String perfil) { this.perfil = perfil; }
 
-    /**
-     * Define o email do utilizador.
-     * @param email email a definir
-     */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * Obtém o hash da password do utilizador.
-     * @return hash da password
-     */
-    public String getPassword() {
-        return password;
-    }
-
-    /**
-     * Define (armazena) o hash da password do utilizador.
-     * NOTA: nunca guardar passwords em claro; guardar sempre o hash.
-     * @param password hash da password
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
     /**
      * Obtém a representação textual do perfil do utilizador (ex: 'ADMIN').
      * @return perfil como string
      */
     public String getPerfilString() {
-        return perfilString;
+        return perfil;
     }
 
     /**
      * Define o perfil do utilizador.
-     * @param perfilString perfil a definir (ex: 'ADMIN', 'OPERADOR')
+     * @param perfil perfil a definir (ex: 'ADMIN', 'OPERADOR')
      */
-    public void setPerfilString(String perfilString) {
-        this.perfilString = perfilString;
+    public void setPerfilString(String perfil) {
+        this.perfil = perfil;
     }
     @Override
     public String toString() {
