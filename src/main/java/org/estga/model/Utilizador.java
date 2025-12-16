@@ -1,36 +1,19 @@
 package org.estga.model;
 
-/**
- Representa a entidade Utilizador, mapeada à tabela 'utilizador'.
- Esta classe funciona como um JavaBean com os dados básicos necessários para
- autenticação e autorização no sistema (e.g., username, password hash e perfil de acesso).
- */
 public class Utilizador {
 
     private int idUtilizador;
-    private String nome; // Usado para nome completo ou username
-    private String email;
-    private String password; // Deverá armazenar o hash da password
-    private String perfilString; // Perfil (e.g., 'ADMIN', 'OPERADOR', 'COMPRAS')
+    private String username;
+    private String password;
+    private String perfil;
 
-    /**
-     Construtor vazio
-     */
-    public Utilizador() {
-    }
+    // 1. Construtor Vazio
+    public Utilizador() {}
 
-    /**
-     * Construtor: completo para mapeamento de DB.
-     idUtilizador: Identificador do utilizador (PK)
-     nome: Nome completo ou username
-     email: Email do utilizador
-     password: Hash da password
-     perfilString: Perfil do utilizador (String)
-     */
-    public Utilizador(int idUtilizador, String nome, String email, String password, String perfilString) {
+    // 2. Construtor Completo
+    public Utilizador(int idUtilizador, String username, String password, String perfil) {
         this.idUtilizador = idUtilizador;
-        this.nome = nome;
-        this.email = email;
+        this.username = username;
         this.password = password;
         this.perfilString = perfilString;
     }
@@ -72,25 +55,22 @@ public class Utilizador {
      * Obtém o nome (ou username) do utilizador.
      * @return nome do utilizador
      */
-    public String getNome() {
-        return nome;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
     /**
      * Define o nome (ou username) do utilizador.
      * @param nome nome a definir
      */
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     /**
      * Obtém o email do utilizador.
      * @return email
      */
-    public String getEmail() {
-        return email;
-    }
+    public String getPerfil() { return perfil; }
+    public void setPerfil(String perfil) { this.perfil = perfil; }
 
     /**
      * Define o email do utilizador.
@@ -134,6 +114,6 @@ public class Utilizador {
     }
     @Override
     public String toString() {
-        return nome;
+        return username + " (" + perfil + ")";
     }
 }
