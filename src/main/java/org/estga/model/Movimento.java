@@ -30,16 +30,51 @@ public class Movimento {
     }
 
     // Getters e Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-    public LocalDate getDataMovimento() { return dataMovimento; }
-    public void setDataMovimento(LocalDate dataMovimento) { this.dataMovimento = dataMovimento; }
-    public String getTipo() { return tipo; }
-    public void setTipo(String tipo) { this.tipo = tipo; }
-    public int getIdProduto() { return idProduto; }
-    public void setIdProduto(int idProduto) { this.idProduto = idProduto; }
-    public int getQuantidade() { return quantidade; }
-    public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
-    public int getIdUtilizador() { return idUtilizador; }
-    public void setIdUtilizador(int idUtilizador) { this.idUtilizador = idUtilizador; }
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public LocalDate getDataMovimento() {
+        return dataMovimento;
+    }
+
+    public void setDataMovimento(LocalDate dataMovimento) {
+        this.dataMovimento = dataMovimento;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public int getIdProduto() {
+        return idProduto;
+    }
+
+    public void setIdProduto(int idProduto) {
+        this.idProduto = idProduto;
+    }
+
+    public int getQuantidade() {
+        return quantidade;
+    }
+
+    public void setQuantidade(int quantidade) {
+        this.quantidade = quantidade;
+    }
+
+    public int getIdUtilizador() {
+        return idUtilizador;
+    }
+
+    public void setIdUtilizador(int idUtilizador) {
+        this.idUtilizador = idUtilizador;
+    }
 }
