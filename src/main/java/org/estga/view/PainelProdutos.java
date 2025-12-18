@@ -5,6 +5,7 @@ import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 public class PainelProdutos extends JPanel {
@@ -29,7 +30,7 @@ public class PainelProdutos extends JPanel {
         estilizarCampo(txtPesquisa);
 
         // Combobox de Ordenação
-        String[] opcoes = {"Menor Stock", "Maior Stock"};
+        String[] opcoes = {"Menor Stock", "Maior Stock", "Menor Preço", "Maior Preço"};
         cbOrdenacao = new JComboBox<>(opcoes);
         cbOrdenacao.setBackground(Color.WHITE);
         cbOrdenacao.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -78,9 +79,20 @@ public class PainelProdutos extends JPanel {
         String termo = txtPesquisa.getText();
         String ordem = (String) cbOrdenacao.getSelectedItem();
         tabela.setModel(service.buscarProdutos(termo, ordem));
+        centrarColunas();
     }
 
     // --- ESTILOS ---
+
+    private void centrarColunas() {
+        DefaultTableCellRenderer centro = new DefaultTableCellRenderer();
+        centro.setHorizontalAlignment(SwingConstants.CENTER);
+
+        for (int i = 0; i < tabela.getColumnCount(); i++) {
+            tabela.getColumnModel().getColumn(i).setCellRenderer(centro);
+        }
+    }
+
     private void estilizarCampo(JTextField txt) {
         txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txt.setPreferredSize(new Dimension(200, 35));
@@ -97,4 +109,5 @@ public class PainelProdutos extends JPanel {
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setBorder(BorderFactory.createEmptyBorder());
     }
+
 }
