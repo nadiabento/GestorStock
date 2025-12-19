@@ -1,12 +1,24 @@
 package org.estga.service;
 
-import org.estga.data.DBConnection;
+import org.estga.data.*;
+import org.estga.model.Fornecedor;
+import org.estga.model.Produto;
+
 import javax.swing.table.DefaultTableModel;
-import java.sql.*;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Vector;
 
 public class ProdutoService {
 
+    private ProdutoDAO produtoDAO = new ProdutoDAO();
+    private StockDAO stockDAO = new StockDAO();
+    private FornecedorDAO fornecedorDAO = new FornecedorDAO();
+    private MovimentoDAO movimentoDAO = new MovimentoDAO();
+
+    // --- 1. LISTAR PRODUTOS ---
     public DefaultTableModel buscarProdutos(String termoPesquisa, String ordenacao) {
         DefaultTableModel modelo = new DefaultTableModel() {
             @Override
@@ -25,55 +37,120 @@ public class ProdutoService {
         modelo.addColumn("Nome");           // Coluna 1
         modelo.addColumn("Descrição");      // Coluna 2
         modelo.addColumn("Preço");          // Coluna 3
-        modelo.addColumn("Stock Atual");    // Coluna 4
+        modelo.addColumn("Stock");
+        modelo.addColumn("Mínimo");    // Coluna 4
         modelo.addColumn("Fornecedor");     // Coluna 5
 
-        // 2. Lógica de Ordenação (Atenção: Os nomes devem ser iguais aos da JComboBox na View)
-        String orderClause = switch (ordenacao) {
-            case "Maior Stock" -> "s.quantidade DESC";
-            case "Menor Stock" -> "s.quantidade ASC";
-            case "Maior Preço" -> "p.preco_unitario DESC";
-            case "Menor Preço" -> "p.preco_unitario ASC";
-            default            -> "p.nome ASC";
-        };
+        // 1. Buscar dados
+        List<Produto> listaProdutos = produtoDAO.buscarTodosComStock();
+        List<Fornecedor> listaFornecedores = fornecedorDAO.buscarTodos();
 
-        // 3. SQL com nomes de colunas claros para evitar confusão
-        String sql = """
-        SELECT p.id_produto, p.nome, p.descricao, p.preco_unitario, 
-               COALESCE(s.quantidade, 0) as valor_stock, 
-               f.nome as nome_fornecedor
-        FROM produto p
-        LEFT JOIN stock s ON p.id_produto = s.id_produto
-        LEFT JOIN fornecedor f ON p.id_fornecedor = f.id_fornecedor
-        WHERE p.nome LIKE ?
-        ORDER BY """ + " " + orderClause;
+        // 2. Aplicar ordenação
+        if (ordenacao != null) {
+            switch (ordenacao) {
+                case "Menor Stock" -> listaProdutos.sort(Comparator.comparingInt(Produto::getStockAtual));
+                case "Maior Stock" -> listaProdutos.sort((p1, p2) -> Integer.compare(p2.getStockAtual(), p1.getStockAtual()));
+                case "Preço Menor" -> listaProdutos.sort(Comparator.comparing(Produto::getPrecoUnitario));
+                case "Preço Maior" -> listaProdutos.sort((p1, p2) -> p2.getPrecoUnitario().compareTo(p1.getPrecoUnitario()));
+            }
+        }
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        // 3. Preencher Tabela
+        for (Produto p : listaProdutos) {
+            // Filtro de Pesquisa (Nome)
+            if (!termoPesquisa.isEmpty() && !p.getNome().toLowerCase().contains(termoPesquisa.toLowerCase())) {
+                continue;
+            }
 
-            stmt.setString(1, "%" + termoPesquisa + "%");
+            Vector<Object> linha = new Vector<>();
+            linha.add(p.getIdProduto());
+            linha.add(p.getNome());
+            linha.add(p.getDescricao());
+            linha.add(String.format("%.2f €", p.getPrecoUnitario()));
+            linha.add(p.getStockAtual());
+            linha.add(p.getStockMinimo());
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Vector<Object> linha = new Vector<>();
-
-                    // 4. PREENCHIMENTO MANUAL (A ordem aqui tem de bater com o passo 1)
-                    linha.add(rs.getInt("id_produto"));         // ID -> Coluna 0
-                    linha.add(rs.getString("nome"));           // Nome -> Coluna 1
-                    linha.add(rs.getString("descricao"));      // Descrição -> Coluna 2
-
-                    // Preço formatado (O SQL já ordenou pelo valor numérico p.preco_unitario)
-                    linha.add(String.format("%.2f €", rs.getDouble("preco_unitario"))); // Preço -> Coluna 3
-
-                    linha.add(rs.getInt("valor_stock"));       // Stock -> Coluna 4 (CORRIGE O Vazio/Desconfigurado)
-                    linha.add(rs.getString("nome_fornecedor"));// Fornecedor -> Coluna 5
-
-                    modelo.addRow(linha);
+            String nomeFornecedor = "Desconhecido";
+            for (Fornecedor f : listaFornecedores) {
+                if (f.getIdFornecedor() == p.getIdFornecedor()) {
+                    nomeFornecedor = f.getNome();
+                    break;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+            linha.add(nomeFornecedor);
+            modelo.addRow(linha);
         }
         return modelo;
+    }
+
+    // --- 2. CRIAR PRODUTO ---
+    public boolean criarProduto(String nome, String desc, double preco, int minimo, int idFornecedor) {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            Produto p = new Produto();
+            p.setNome(nome);
+            p.setDescricao(desc);
+            p.setPrecoUnitario(BigDecimal.valueOf(preco));
+            p.setStockMinimo(minimo);
+            p.setIdFornecedor(idFornecedor);
+
+            int idNovo = produtoDAO.inserir(conn, p);
+            stockDAO.atualizarStock(conn, idNovo, 0);
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // --- 3. ATUALIZAR PRODUTO ---
+    public boolean atualizarProduto(int id, String nome, String desc, double preco, int minimo, int idFornecedor) {
+        try (Connection conn = DBConnection.getConnection()) {
+            Produto p = new Produto();
+            p.setIdProduto(id);
+            p.setNome(nome);
+            p.setDescricao(desc);
+            p.setPrecoUnitario(BigDecimal.valueOf(preco));
+            p.setStockMinimo(minimo);
+            p.setIdFornecedor(idFornecedor);
+
+            return produtoDAO.atualizar(conn, p);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // --- 4. ELIMINAR PRODUTO ---
+    public boolean eliminarProduto(int idProduto) {
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            movimentoDAO.eliminarPorProduto(conn, idProduto);
+            stockDAO.eliminarPorProduto(conn, idProduto);
+            produtoDAO.eliminar(conn, idProduto);
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            try {
+                Connection conn = DBConnection.getConnection();
+                if (conn != null) conn.rollback();
+            } catch (Exception ex) {}
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // --- HELPER ---
+    public Vector<String> getFornecedoresCombo() {
+        Vector<String> lista = new Vector<>();
+        for (Fornecedor f : fornecedorDAO.buscarTodos()) {
+            lista.add(f.getIdFornecedor() + " - " + f.getNome());
+        }
+        return lista;
     }
 }

@@ -7,6 +7,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 public class PainelSaida extends JPanel {
 
@@ -22,6 +24,13 @@ public class PainelSaida extends JPanel {
 
         setLayout(new GridBagLayout());
         setBackground(Color.WHITE);
+
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                atualizarListas();
+            }
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(15, 15, 5, 15);
@@ -39,7 +48,7 @@ public class PainelSaida extends JPanel {
 
         gbc.gridy++; gbc.gridx = 0; add(criarLabel("Produto:"), gbc);
         gbc.gridx = 1;
-        cbProduto = new JComboBox<>(service.getModelProdutos());
+        cbProduto = new JComboBox<>();
         estilizarCombo(cbProduto);
         add(cbProduto, gbc);
 
@@ -51,17 +60,24 @@ public class PainelSaida extends JPanel {
 
         gbc.gridy++; gbc.gridx = 0; add(criarLabel("Destinatário:"), gbc);
         gbc.gridx = 1;
-        cbCliente = new JComboBox<>(service.getModelClientes());
+        cbCliente = new JComboBox<>();
         estilizarCombo(cbCliente);
         add(cbCliente, gbc);
 
         gbc.gridy++; gbc.gridx = 0; gbc.gridwidth = 2;
         gbc.insets = new Insets(20, 15, 10, 15);
         JButton btnSalvar = new JButton("CONFIRMAR SAÍDA");
-        estilizarBotao(btnSalvar, new Color(220, 53, 69)); // Vermelho
+        estilizarBotao(btnSalvar, new Color(220, 53, 69));
 
         btnSalvar.addActionListener(e -> confirmarSaida());
         add(btnSalvar, gbc);
+
+        atualizarListas();
+    }
+
+    private void atualizarListas() {
+        cbProduto.setModel(service.getModelProdutos());
+        cbCliente.setModel(service.getModelClientes());
     }
 
     private void confirmarSaida() {
@@ -69,6 +85,11 @@ public class PainelSaida extends JPanel {
             String prod = (String) cbProduto.getSelectedItem();
             String cli = (String) cbCliente.getSelectedItem();
             String qtdTexto = txtQuantidade.getText();
+
+            if (prod == null || cli == null) {
+                JOptionPane.showMessageDialog(this, "Selecione Produto e Destinatário.");
+                return;
+            }
 
             if(qtdTexto.isEmpty()) { JOptionPane.showMessageDialog(this, "Insira uma quantidade."); return; }
 

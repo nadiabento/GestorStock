@@ -25,7 +25,7 @@ public class Main extends JFrame {
         this.utilizadorAtual = user;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 650);
+        setSize(1250, 750);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
@@ -59,7 +59,6 @@ public class Main extends JFrame {
         lblPerfil.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblPerfil.setAlignmentX(Component.LEFT_ALIGNMENT);
         sidebar.add(lblPerfil);
-
         sidebar.add(Box.createVerticalStrut(40));
 
         // Botões do Menu
@@ -103,7 +102,7 @@ public class Main extends JFrame {
         cardPanel.setBackground(Color.WHITE);
 
         this.panelHome = new PainelHome(user);
-        PainelProdutos panelProdutos = new PainelProdutos();
+        PainelProdutos panelProdutos = new PainelProdutos(this);
         PainelEntrada panelEntrada = new PainelEntrada(this);
         PainelSaida panelSaida = new PainelSaida(this);
         PainelRelatorios panelRelatorios = new PainelRelatorios();
@@ -117,13 +116,15 @@ public class Main extends JFrame {
         // ==================================================================================
         // 3. AÇÕES DOS BOTÕES
         // ==================================================================================
-        btnHome.addActionListener(e -> cardLayout.show(cardPanel, "HOME"));
+        btnHome.addActionListener(e -> {
+            atualizarHome();
+            cardLayout.show(cardPanel, "HOME");
+        });
         btnProdutos.addActionListener(e -> cardLayout.show(cardPanel, "PRODUTOS"));
         btnEntrada.addActionListener(e -> cardLayout.show(cardPanel, "ENTRADA"));
         btnSaida.addActionListener(e -> cardLayout.show(cardPanel, "SAIDA"));
         btnRelatorios.addActionListener(e -> cardLayout.show(cardPanel, "RELATORIOS"));
 
-        // Ação do Botão Sair
         btnSair.addActionListener(e -> {
             this.dispose();
             new LoginFrame().setVisible(true);
@@ -140,6 +141,11 @@ public class Main extends JFrame {
     public int getIdUtilizadorAtual() {
         return utilizadorAtual.getIdUtilizador();
     }
+
+    public Utilizador getUtilizadorAtual() {
+        return utilizadorAtual;
+    }
+    // ----------------------------------
 
     private JButton criarBotaoMenu(String texto) {
         JButton btn = new JButton(texto);
@@ -169,7 +175,7 @@ public class Main extends JFrame {
 
     public static void main(String[] args) {
         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
-        System.out.println("A iniciar aplicação...");
+        System.out.println("A iniciar o programa ...");
         DBConnection.getConnection();
         SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
     }

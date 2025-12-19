@@ -7,6 +7,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 public class PainelEntrada extends JPanel {
 
@@ -22,6 +24,13 @@ public class PainelEntrada extends JPanel {
 
         setLayout(new GridBagLayout());
         setBackground(Color.WHITE);
+
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                atualizarListas();
+            }
+        });
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(15, 15, 5, 15);
@@ -39,7 +48,7 @@ public class PainelEntrada extends JPanel {
 
         gbc.gridy++; gbc.gridx = 0; add(criarLabel("Produto:"), gbc);
         gbc.gridx = 1;
-        cbProduto = new JComboBox<>(service.getModelProdutos());
+        cbProduto = new JComboBox<>();
         estilizarCombo(cbProduto);
         add(cbProduto, gbc);
 
@@ -51,17 +60,23 @@ public class PainelEntrada extends JPanel {
 
         gbc.gridy++; gbc.gridx = 0; add(criarLabel("Fornecedor:"), gbc);
         gbc.gridx = 1;
-        cbFornecedor = new JComboBox<>(service.getModelFornecedores());
+        cbFornecedor = new JComboBox<>();
         estilizarCombo(cbFornecedor);
         add(cbFornecedor, gbc);
 
         gbc.gridy++; gbc.gridx = 0; gbc.gridwidth = 2;
         gbc.insets = new Insets(20, 15, 10, 15);
         JButton btnSalvar = new JButton("CONFIRMAR ENTRADA");
-        estilizarBotao(btnSalvar, new Color(40, 167, 69)); // Verde
-
+        estilizarBotao(btnSalvar, new Color(40, 167, 69));
         btnSalvar.addActionListener(e -> confirmarEntrada());
         add(btnSalvar, gbc);
+
+        atualizarListas();
+    }
+
+    private void atualizarListas() {
+        cbProduto.setModel(service.getModelProdutos());
+        cbFornecedor.setModel(service.getModelFornecedores());
     }
 
     private void confirmarEntrada() {
@@ -69,6 +84,11 @@ public class PainelEntrada extends JPanel {
             String prod = (String) cbProduto.getSelectedItem();
             String forn = (String) cbFornecedor.getSelectedItem();
             String qtdTexto = txtQuantidade.getText();
+
+            if (prod == null || forn == null) {
+                JOptionPane.showMessageDialog(this, "Selecione Produto e Fornecedor.");
+                return;
+            }
 
             if(qtdTexto.isEmpty()) { JOptionPane.showMessageDialog(this, "Insira uma quantidade."); return; }
 
