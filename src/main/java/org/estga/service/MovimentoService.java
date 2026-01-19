@@ -1,82 +1,64 @@
 package org.estga.service;
 
-import org.estga.data.MovimentoDAO;
-import org.estga.data.StockDAO;
-import java.sql.SQLException;
+import org.estga.data.*;
+import org.estga.model.*;
+import javax.swing.DefaultComboBoxModel;
+import java.sql.Connection;
+import java.util.Vector;
 
 public class MovimentoService {
+    private ProdutoDAO produtoDAO = new ProdutoDAO();
+    private FornecedorDAO fornecedorDAO = new FornecedorDAO();
+    private ClienteDAO clienteDAO = new ClienteDAO();
+    private MovimentoDAO movimentoDAO = new MovimentoDAO();
+    private StockDAO stockDAO = new StockDAO();
 
-    private final MovimentoDAO movimentoDAO;
-    private final StockDAO stockDAO;
-
-    public MovimentoService() {
-        this.movimentoDAO = new MovimentoDAO();
-        this.stockDAO = new StockDAO();
+    public DefaultComboBoxModel<String> getModelProdutos() {
+        Vector<String> v = new Vector<>();
+        for(Produto p : produtoDAO.buscarTodosComStock()) v.add(p.getNome());
+        return new DefaultComboBoxModel<>(v);
     }
 
-    /**
-     * Regista uma entrada de stock.
-     * @param idProduto ID do produto.
-     * @param quantidade Quantidade a entrar.
-     * @param idFornecedor ID do fornecedor.
-     * @param idUtilizador ID do utilizador que regista.
-     * @throws Exception Se a quantidade for inválida ou ocorrer um erro de DB.
-     */
-    public void registrarEntrada(int idProduto, int quantidade, int idFornecedor, int idUtilizador) throws Exception {
-        if (quantidade <= 0) {
-            throw new IllegalArgumentException("A quantidade de entrada deve ser positiva.");
-        }
-
-        try {
-            // 1. Grava o Movimento principal
-            int idMovimento = movimentoDAO.inserirMovimento("ENTRADA", idUtilizador);
-
-            // 2. Grava a Linha de Movimento (detalhe)
-            movimentoDAO.inserirLinhaMovimento(idMovimento, idProduto, quantidade);
-
-            // 3. Atualiza o Stock (aumenta)
-            // Usa-se a quantidade positiva
-            stockDAO.atualizarStock(idProduto, quantidade);
-
-        } catch (SQLException e) {
-            // Tratamento genérico de erro de DB
-            throw new Exception("Erro ao registar Entrada na base de dados: " + e.getMessage());
-        }
+    public DefaultComboBoxModel<String> getModelFornecedores() {
+        Vector<String> v = new Vector<>();
+        for(Fornecedor f : fornecedorDAO.buscarTodos()) v.add(f.getNome());
+        return new DefaultComboBoxModel<>(v);
     }
 
-    /**
-     * Regista uma saída de stock, verificando a disponibilidade.
-     * @param idProduto ID do produto.
-     * @param quantidade Quantidade a sair.
-     * @param idUtilizador ID do utilizador que regista.
-     * @throws Exception Se a quantidade for inválida, o stock for insuficiente, ou ocorrer um erro de DB.
-     */
-    public void registrarSaida(int idProduto, int quantidade, int idUtilizador) throws Exception {
-        if (quantidade <= 0) {
-            throw new IllegalArgumentException("A quantidade de saída deve ser positiva.");
-        }
+    public DefaultComboBoxModel<String> getModelClientes() {
+        Vector<String> v = new Vector<>();
+        for(Cliente c : clienteDAO.buscarTodos()) v.add(c.getNome());
+        return new DefaultComboBoxModel<>(v);
+    }
 
-        // 1. Verifica o Stock
-        int stockAtual = stockDAO.consultarQuantidade(idProduto);
+    public boolean registarEntrada(String nomeProd, int qtd, String nomeForn, int idUser) {
+        return processar(nomeProd, qtd, idUser, "ENTRADA");
+    }
 
-        if (quantidade > stockAtual) {
-            throw new IllegalStateException(String.format("Stock insuficiente! Apenas %d unidades disponíveis.", stockAtual));
-        }
+    public boolean registarSaida(String nomeProd, int qtd, String nomeCli, int idUser) {
+        // Verificar stock antes
+        int idProd = getIdByName(nomeProd);
+        if(stockDAO.consultarQuantidade(idProd) < qtd) return false;
+        return processar(nomeProd, qtd, idUser, "SAIDA");
+    }
 
-        try {
-            // 2. Grava o Movimento principal
-            int idMovimento = movimentoDAO.inserirMovimento("SAÍDA", idUtilizador);
+    private boolean processar(String nomeProd, int qtd, int idUser, String tipo) {
+        int idProd = getIdByName(nomeProd);
+        if(idProd == -1) return false;
 
-            // 3. Grava a Linha de Movimento (detalhe)
-            movimentoDAO.inserirLinhaMovimento(idMovimento, idProduto, quantidade);
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            int idMov = movimentoDAO.inserirMovimento(conn, tipo, idUser);
+            movimentoDAO.inserirLinhaMovimento(conn, idMov, idProd, qtd);
+            stockDAO.atualizarStockTransacional(conn, idProd, qtd, tipo.equals("ENTRADA"));
+            conn.commit();
+            return true;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
 
-            // 4. Atualiza o Stock (diminui)
-            // Usa-se a quantidade negativa para subtrair
-            stockDAO.atualizarStock(idProduto, -quantidade);
-
-        } catch (SQLException e) {
-            // Tratamento genérico de erro de DB
-            throw new Exception("Erro ao registar Saída na base de dados: " + e.getMessage());
-        }
+    // Helper
+    private int getIdByName(String nome) {
+        for(Produto p : produtoDAO.buscarTodosComStock()) if(p.getNome().equals(nome)) return p.getIdProduto(); // Ajusta getId()
+        return -1;
     }
 }

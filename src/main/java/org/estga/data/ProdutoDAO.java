@@ -15,9 +15,6 @@ public class ProdutoDAO {
     public List<Produto> buscarTodosComStock() {
         List<Produto> produtos = new ArrayList<>();
 
-        // A query faz um LEFT JOIN com a tabela stock para obter a quantidade.
-        // COALESCE(s.quantidade, 0) garante que o stock é 0 se o produto
-        // ainda não tiver um registo na tabela stock.
         String sql = "SELECT p.*, COALESCE(s.quantidade, 0) AS stock_atual " +
                 "FROM produto p " +
                 "LEFT JOIN stock s ON p.id_produto = s.id_produto " +
@@ -35,7 +32,7 @@ public class ProdutoDAO {
                         rs.getBigDecimal("preco_unitario"),
                         rs.getInt("stock_minimo"),
                         rs.getInt("id_fornecedor"),
-                        rs.getInt("stock_atual") // Mapeia o resultado do COALESCE
+                        rs.getInt("stock_atual")
                 );
                 produtos.add(produto);
             }
@@ -43,5 +40,39 @@ public class ProdutoDAO {
             System.err.println("Erro ao buscar produtos e stock: " + e.getMessage());
         }
         return produtos;
+    }
+
+    public int inserir(Connection conn, Produto p) throws SQLException {
+        String sql = "INSERT INTO produto (nome, descricao, preco_unitario, stock_minimo, id_fornecedor) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, p.getNome());
+            stmt.setString(2, p.getDescricao());
+            stmt.setBigDecimal(3, p.getPrecoUnitario());
+            stmt.setInt(4, p.getStockMinimo());
+            stmt.setInt(5, p.getIdFornecedor());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) { if (rs.next()) return rs.getInt(1); }
+        }
+        return -1;
+    }
+
+    public boolean atualizar(Connection conn, Produto p) throws SQLException {
+        String sql = "UPDATE produto SET nome=?, descricao=?, preco_unitario=?, stock_minimo=?, id_fornecedor=? WHERE id_produto=?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, p.getNome());
+            stmt.setString(2, p.getDescricao());
+            stmt.setBigDecimal(3, p.getPrecoUnitario());
+            stmt.setInt(4, p.getStockMinimo());
+            stmt.setInt(5, p.getIdFornecedor());
+            stmt.setInt(6, p.getIdProduto());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public void eliminar(Connection conn, int id) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM produto WHERE id_produto=?")) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
     }
 }
